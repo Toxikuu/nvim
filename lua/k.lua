@@ -8,8 +8,8 @@ map("n", "<C-c>", "m`ggVGy``", { desc = "Copy file" })
 map("n", ";", ":", { desc = "Enter command mode" })
 
 -- Gotos
-map("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", opts)
-map("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
+map("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<cr>", opts)
+map("n", "gd", "<cmd>lua vim.lsp.buf.definition()<cr>", opts)
 
 -- Unbind navigation nuisances
 map({ "i", "n", "v" }, "<s-down>", "<down>", opts)
@@ -20,8 +20,8 @@ map("v", ">", ">gv", opts)
 map("v", "<", "<gv", opts)
 
 -- Move lines
-map("v", "<A-Down>", ":m '>+1<CR>gv=gv", opts)
-map("v", "<A-Up>",   ":m '>-2<CR>gv=gv", opts)
+map("v", "<A-Down>", ":m '>+1<cr>gv=gv", opts)
+map("v", "<A-Up>",   ":m '>-2<cr>gv=gv", opts)
 
 -- Splits
 map("n", "sv", ":vsplit<cr>", opts)
@@ -58,5 +58,8 @@ vim.cmd([[
 ]])
 
 -- Telescope mappings
-map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "Find files" })
-
+-- TODO: Decide if I want to use <cmd> for all
+local ts = require("telescope.builtin")
+map("n", "<leader>ff", ts.find_files,                 { desc = "Find files"    })
+map("n", "<leader>fg", ts.live_grep,                  { desc = "Live grep"     })
+map("n", "<leader>fp", "<cmd>Telescope projects<cr>", { desc = "Find projects" })
