@@ -1,0 +1,11 @@
+== nvim ==
+
+my personal nvim config. it's minimal and independent.
+
+i like setting this up like so:
+
+```
+su -c 'git clone https://github.com/toxikuu/nvim /etc/xdg/nvim'
+echo 'dofile("/etc/xdg/nvim/init.lua")' | install -vDm644 /dev/stdin ~/.config/nvim/init.lua
+echo 'dofile("/etc/xdg/nvim/init.lua")' | su - -c 'install -vDm644 /dev/stdin ~/.config/nvim/init.lua'
+```
