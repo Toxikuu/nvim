@@ -61,11 +61,6 @@ return {
                         exportPdf = "never",
                     },
                 },
-                -- shellcheck = {
-                --     settings = {
-                --
-                --     },
-                -- },
                 clangd = {
                     root_dir = function(fname)
                         return require("lspconfig.util").root_pattern(
@@ -98,6 +93,7 @@ return {
                         clangdFileStatus = true,
                     },
                 },
+                bashls = {},
             },
 
             setup = {},
