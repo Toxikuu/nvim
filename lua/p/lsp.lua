@@ -8,36 +8,60 @@ return {
         },
     },
 
-    opts = function()
-        local ret = {
-            diagnostics = {
-                underline = true,
-                update_in_insert = false,
-                virtual_text = {
-                    spacing = 4,
-                    source = "if_many",
-                    prefix = "-",
+    config = function()
+        -- Diagnostic keymaps
+        local opts = { noremap = true, silent = true }
+        local map = vim.keymap.set
+        map("n", "<leader>dg", vim.diagnostic.open_float, opts)
+        map("n", "<leader>dq", vim.diagnostic.setloclist, opts)
+
+        vim.lsp.enable({
+            -- "bashls",
+            "clangd",
+            "lua_ls",
+            "rust_analyzer",
+            "tinymist",
+        })
+
+        vim.diagnostic.config({
+            underline = true,
+            update_in_insert = false,
+            virtual_text = {
+                spacing = 4,
+                source = "if_many",
+                prefix = "-",
+            },
+            severity_sort = true,
+            signs = {
+                text = {
+                    [vim.diagnostic.severity.ERROR] = "!",
+                    [vim.diagnostic.severity.WARN]  = "?",
+                    [vim.diagnostic.severity.HINT]  = "+",
+                    [vim.diagnostic.severity.INFO]  = "-",
                 },
-                severity_sort = true,
-                signs = {
-                    text = {
-                        [vim.diagnostic.severity.ERROR] = "!",
-                        [vim.diagnostic.severity.WARN]  = "?",
-                        [vim.diagnostic.severity.HINT]  = "+",
-                        [vim.diagnostic.severity.INFO]  = "-",
-                    },
-                },
             },
-
-            inlay_hints = {
-                enabled = false,
+            float = {
+                focusable = true,
+                style = "minimal",
+                source = true,
+                header = "",
+                prefix = "",
             },
+        })
 
-            codelens = {
-                enabled = false,
-            },
+        vim.filetype.add({
+            pattern = {
+                [".*/p/.*/config"] = "toml",
+            }
+        })
 
+        vim.lsp.config("*", {
             capabilities = {
+                textDocument = {
+                    semanticTokens = {
+                        multilineTokenSupport = true,
+                    }
+                },
                 workspace = {
                     fileOperations = {
                         didRename = true,
@@ -45,116 +69,111 @@ return {
                     },
                 },
             },
+            root_markers = {
+                ".git",
+            },
+        })
 
-            servers = {
-                rust_analyzer = {
-                    settings = {
-                        ["rust-analyzer"] = {
-                            check = {
-                                command = "clippy",
-                            },
+        vim.lsp.config("lua_ls", {
+            settings = {
+                Lua = {
+                    runtime = {
+                        version = "LuaJIT",
+                    },
+                    diagnostics = {
+                        globals = {
+                            "vim",
+                            "require",
+                        },
+                    },
+                    workspace = {
+                        -- make the server aware of neovim runtime files
+                        library = vim.api.nvim_get_runtime_file("", true),
+                    },
+                    telemetry = {
+                        enable = false,
+                    },
+                },
+            },
+        })
 
-                            imports = {
-                                granularity = {
-                                    group = "module"
-                                },
-                                prefix = "self",
-                            },
-                            cargo = {
-                                buildScripts = {
-                                    enable = true,
-                                },
-                            },
-                            procMacro = {
-                                enable = true,
-                            },
-                            diagnostics = {
-                                experimental = {
-                                    enable = true,
-                                },
-                            },
+        vim.lsp.config("tinymist", {
+            settings = {
+                exportPdf = "never",
+            },
+        })
+
+        -- vim.lsp.config("bashls", {
+        --     cmd = {
+        --         "bash-language-server",
+        --         "start",
+        --     },
+        --     filetypes = { "bash", "sh" },
+        -- })
+
+        vim.lsp.config("clangd", {
+            root_markers = {
+                "compile_commands.json",
+                "compile_flags.txt",
+                "Makefile",
+                "configure.ac",
+                "configure.in",
+                "config.h.in",
+                "meson.build",
+                "meson_options.txt",
+                "build.ninja",
+            },
+
+            capabilities = {
+                offsetEncoding = { "utf-16" },
+            },
+
+            cmd = {
+                "clangd",
+                "--background-index",
+                "--clang-tidy",
+                "--header-insertion=iwyu",
+                "--completion-style=detailed",
+                "--function-arg-placeholders",
+                "--fallback-style=llvm",
+            },
+
+            init_options = {
+                usePlaceholders = true,
+                completeUnimported = true,
+                clangdFileStatus = true,
+            },
+        })
+
+        vim.lsp.config("rust_analyzer", {
+            settings = {
+                ["rust-analyzer"] = {
+                    check = {
+                        command = "clippy",
+                    },
+
+                    imports = {
+                        granularity = {
+                            group = "module"
+                        },
+                        prefix = "self",
+                    },
+                    cargo = {
+                        buildScripts = {
+                            enable = true,
+                        },
+                    },
+                    procMacro = {
+                        enable = true,
+                    },
+                    diagnostics = {
+                        experimental = {
+                            enable = true,
                         },
                     },
                 },
-                tinymist = {
-                    settings = {
-                        exportPdf = "never",
-                    },
-                },
-                clangd = {
-                    root_dir = function(fname)
-                        return require("lspconfig.util").root_pattern(
-                            "Makefile",
-                            "configure.ac",
-                            "configure.in",
-                            "config.h.in",
-                            "meson.build",
-                            "meson_options.txt",
-                            "build.ninja"
-                        )(fname) or require("lspconfig.util").root_pattern("compile_commands.json", "compile_flags.txt")(
-                            fname
-                        ) or require("lspconfig.util").find_git_ancestor(fname)
-                    end,
-                    capabilities = {
-                        offsetEncoding = { "utf-16" },
-                    },
-                    cmd = {
-                        "clangd",
-                        "--background-index",
-                        "--clang-tidy",
-                        "--header-insertion=iwyu",
-                        "--completion-style=detailed",
-                        "--function-arg-placeholders",
-                        "--fallback-style=llvm",
-                    },
-                    init_options = {
-                        usePlaceholders = true,
-                        completeUnimported = true,
-                        clangdFileStatus = true,
-                    },
-                },
-                bashls = {},
             },
-
-            setup = {},
-        }
-
-        return ret
-    end,
-
-    config = function(_, opts)
-        -- set borders for lsp popups
-        local handlers = vim.lsp.handlers
-        handlers["textDocument/hover"] = vim.lsp.with(handlers.hover, {
-            border = "single",
-        })
-        handlers["textDocument/signatureHelp"] = vim.lsp.with(handlers.signature_help, {
-            border = "single",
         })
 
-        -- setup lsp
-        local lspconfig = require("lspconfig")
-
-        -- setup diagnostics
-        vim.diagnostic.config(opts.diagnostics)
-        if opts.diagnostics and opts.diagnostics.signs and opts.diagnostics.signs.text then
-            for severity, icon in pairs(opts.diagnostics.signs.text) do
-                local name = "DiagnosticSign" .. ({
-                    [vim.diagnostic.severity.ERROR] = "Error",
-                    [vim.diagnostic.severity.WARN]  = "Warn",
-                    [vim.diagnostic.severity.INFO]  = "Info",
-                    [vim.diagnostic.severity.HINT]  = "Hint",
-                })[severity]
-                vim.fn.sign_define(name, { text = icon, texthl = name, numhl = "" })
-            end
-        end
-
-        -- setup servers
-        for server, server_opts in pairs(opts.servers or {}) do
-            local setup = opts.setup[server] or function() return false end
-            if not setup(server, server_opts) then
-                lspconfig[server].setup(server_opts)
-            end
-        end
     end,
 }
